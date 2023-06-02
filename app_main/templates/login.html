@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logowanie</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+        <style>
+        /* Your existing CSS */
+        /* ... */
+
+        /* Add this section for login form styles */
+        .login-container {
+            grid-column: line2 / line3;
+            grid-row: line2 / line4;
+            padding: 20px;
+            background-color: var(--panels-background);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-form {
+            width: 80%;
+            max-width: 400px;
+            background-color: var(--grid-background);
+            border: 1px solid var(--grid-color);
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        .login-form h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .login-form label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .login-form input[type="text"],
+        .login-form input[type="password"] {
+            width: 95%;
+            padding: 8px;
+            border: 1px solid var(--grid-color);
+            border-radius: 3px;
+            margin-bottom: 15px;
+        }
+
+        .login-form input[type="submit"] {
+            width: 100%;
+            background-color: var(--submit-file-button-background);
+            border: 1px solid var(--grid-color);
+            padding: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--grid-color);
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .login-form input[type="submit"]:hover {
+            background-color: var(--submit-file-button-hover);
+        }
+    </style>
+
+</head>
+<body>
+    <div class="grid">
+        <!-- Other elements -->
+        <div class="login-container">
+            <form class="login-form" id="login-form" action="{% url 'login' %}" method="post">
+                {% csrf_token %}
+                <h2>Login</h2>
+                <label for="username">Nazwa użytkownika:</label>
+                <input type="text" id="username" name="username" required>
+                <label for="password">Hasło:</label>
+                <input type="password" id="password" name="password" required>
+                <input type="submit" value="Zaloguj">
+            </form>
+        </div>
+    </div>
+    <script src="{%  static 'login.js' %}"></script>
+</body>
+</html>

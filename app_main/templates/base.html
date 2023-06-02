@@ -1,0 +1,18 @@
+{% load static %}
+<!DOCTYPE html>
+<html data-theme="blue">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kompilator</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+
+</head>
+<body>
+    <div class="grid">
+        {% block content %}
+        <!-- Zawartość konkretnego szablonu zostanie wstawiona tutaj -->
+        {% endblock %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!-- index.html -->
+{% extends "base.html" %}
+{% load static %}
+{%  load custom_filters %}
+{% load djangocodemirror_tags %}
+{% block content %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <div class="top-menu">
+			<ol>
+				<li><div class="option"> Plik </div>
+					<ul>
+                        <li onclick="deleteItem()">Usuń</li>
+                        <li onclick="addDir()">Dodaj katalog</li>
+                        <li onclick="recompile()"> Kompiluj</li>
+                        <form action="/recompile/" id="recompile_form" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="dir_id" id="recompile_dir_id" value="{{ dir_id }}" >
+                            <input type="hidden" name="file_id" id="recompile_file_id" value="{{ file_id }}" >
+                            <input type="hidden" id="standard-input" name="standard" value="">
+                            <input type="hidden" id="optimization-input" name="optimization" value="">
+                            <input type="hidden" id="processor-input" name="processor" value="">
+                            <input type="hidden" id="dependent-input" name="dependent" value="">
+                            {% if file_id is not None %}
+                            <li onclick="document.getElementById('recompile_form').submit()">Kompiluj</li>
+                            {% endif %}
+                        </form>
+                        {% if file_id is not None %}
+                         <li onclick="window.open('{% url 'download_asm' file_id %}', '_blank')">Pobierz ASM</li>
+                        {% endif %}
+					</ul>
+				</li>
+
+
+				<li> <div class="option"> Widok </div>
+					<ul>
+						<li onclick="document.documentElement.setAttribute('data-theme','light')">Tryb jasny</li>
+						<li onclick="document.documentElement.setAttribute('data-theme','blue')">Tryb niebieski</li>
+					</ul>
+				</li>
+
+				<li> <div class="option"> Konto </div>
+					<ul>
+						<li onclick="window.location.href='{% url 'logout' %}'">Wyloguj</li>
+					</ul>
+				</li>
+			</ol>
+
+		</div>
+		<div class="left-menu">
+            <div class="title" id="root_dir" onclick="showFile(null)">/root</div>
+            <span id="dir-list">
+            {% for file in files %}
+                <div class="file" id="file{{ file.id }}" onclick="showFile({{ file.id }})" >{{ file.name }}</div>
+            {% endfor %}
+            {% for directory in directories %}
+                {{ directory|display_directories_and_files:0 }}
+            {% endfor %}
+            </span>
+            <form method="POST" enctype="multipart/form-data" id="file_upload" action="/add_file/">
+              {% csrf_token %}
+                <div class="drop_file_frame">
+                <div class="drop_file">
+                  Dodaj plik <br><br>
+                  <input type="file" id="actual-btn" name="file_upload" onchange="addFile()"/>
+                    <input type="hidden" id="dir-id" name="directory_id" value="{{ dir_id }}" >
+
+                  <label for="actual-btn" id="label_button">Wybierz plik</label>
+                </div>
+              </div>
+            </form>
+            <p class="welcome">
+                Witaj {{ user.username }}!
+            </p>
+        </div>
+		<div class="program-container">
+            <textarea id="code_box"> {{ code_in_c }} </textarea>
+            {% codemirror_instance 'css' 'a' 'code_box' %}
+		</div>
+		<div class="right-code">
+			<div class="code-title">Fragment kodu</div>
+            <div class="show_and_hide">
+                <button onclick="hideAll()">Schowaj wszystkie</button>
+                <button onclick="showAll()">Pokaż wszystkie</button>
+            </div>
+			<p id="asm_sections">
+                Wybierz plik, aby wyświetlić skompilowany kod.
+			</p>
+		</div>
+		<div class="bottom-menu">
+			<input class="radio" id="one" name="group" type="radio" checked>
+			<input class="radio" id="two" name="group" type="radio">
+			<input class="radio" id="three" name="group" type="radio">
+			<input class="radio" id="four" name="group" type="radio">
+			<label class="tab-wrapper" id="one-tab" for="one"><span class="tab">Standard</span></label>
+			<label class="tab-wrapper" id="two-tab" for="two"><span class="tab">Optymalizacje</span></label>
+			<label class="tab-wrapper" id="three-tab" for="three"><span class="tab">Procesor</span></label>
+			<label class="tab-wrapper" id="four-tab" for="four"><span class="tab">Zależne</span></label>
+            <div class="panels">
+                <div class="panel" id="one-panel">
+                    <div class="panel-title">Standard</div>
+                        <select id="standard-select">
+                          <option value="c89">C89</option>
+                          <option value="c99">C99</option>
+                          <option value="c11">C11</option>
+                        </select>
+                    </div>
+                <div class="panel" id="two-panel">
+                    <div class="panel-title">Optymalizacje</div>
+                        <input type="checkbox" id="opt1" name="opt1" value="opt-code-speed">
+                        <label for="opt1">Optymalizacja prędkości kodu</label><br>
+                        <input type="checkbox" id="opt2" name="opt2" value="opt-code-size">
+                        <label for="opt2">Optymalizacja rozmiaru kodu</label><br>
+                        <input type="checkbox" id="opt3" name="opt3" value="opt-code-stack-auto">
+                        <label for="opt3">Optymalizacja pamięci (stack-auto)</label><br>
+                    </div>
+                    <div class="panel" id="three-panel">
+                        <div class="panel-title">Procesor</div>
+                        <select id="processor-select">
+                          <option value="mmcs51">MCS51</option>
+                          <option value="z80">Z80</option>
+                          <option value="mstm8">STM8</option>
+                        </select>
+                    </div>
+                    <div class="panel" id="four-panel">
+                        <div class="panel-title">Zależne</div>
+                        <!-- Add your processor-specific options here -->
+                        <select id="processor-dependent-select">
+                          <option value="model-small">Small Model Program</option>
+                          <option value="model-medium">Medium Model Program</option>
+                          <option value="model-large">Large Model Program</option>
+                            <option value="model-huge">Huge Model Program</option>
+                        </select>
+                    </div>
+            </div>
+        </div>
+
+    <script src="{% static 'script.js' %}"> </script>
+    <script>
+        let currentFileId = {{ file_id|default:"null" }};
+        let currentDirId = {{ dir_id|default:"null" }};
+        if (currentDirId !== null) {
+            showDir(currentDirId);
+        } else  {
+            showFile(currentFileId);
+        }
+
+    </script>
+
+{% endblock %}
